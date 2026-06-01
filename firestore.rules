@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin();
+    }
+
+    match /healthEntries/{entryId} {
+      // Users read/write only their own entries
+      allow read, write: if request.auth != null
+          && request.auth.uid == resource.data.userId;
+
+      // Allow creating an entry for yourself
+      allow create: if request.auth != null
+          && request.auth.uid == request.resource.data.userId;
+
+      // Admins can read and write all entries
+      allow read, write: if isAdmin();
+    }
+  }
+}

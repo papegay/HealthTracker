@@ -1,0 +1,18 @@
+# Android
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+
+# Sensitive — never commit these
+app/google-services.json
+
+# Gradle wrapper jar — downloaded by CI
+gradle/wrapper/gradle-wrapper.jar
