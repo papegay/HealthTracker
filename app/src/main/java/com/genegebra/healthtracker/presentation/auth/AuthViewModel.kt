@@ -10,6 +10,7 @@ import com.genegebra.healthtracker.domain.usecase.LoginUseCase
 import com.genegebra.healthtracker.domain.usecase.RegisterUseCase
 import com.google.android.recaptcha.Recaptcha
 import com.google.android.recaptcha.RecaptchaAction
+import kotlinx.coroutines.tasks.await
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -66,8 +67,8 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val recaptchaClient = Recaptcha.getTasksClient(activity)
-                val token = recaptchaClient.execute(RecaptchaAction.REGISTER).getOrThrow()
+                val recaptchaClient = Recaptcha.getTasksClient(activity.application, recaptchaSiteKey).await()
+                val token = recaptchaClient.execute(RecaptchaAction.custom("register")).await()
                 registerUseCase(email, password, token)
                     .onSuccess {
                         _uiState.update {
