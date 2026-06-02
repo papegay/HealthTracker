@@ -1,6 +1,5 @@
 package com.genegebra.healthtracker.presentation.auth
 
-import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.genegebra.healthtracker.domain.model.SessionManager
@@ -8,9 +7,6 @@ import com.genegebra.healthtracker.domain.model.User
 import com.genegebra.healthtracker.domain.repository.AuthRepository
 import com.genegebra.healthtracker.domain.usecase.LoginUseCase
 import com.genegebra.healthtracker.domain.usecase.RegisterUseCase
-import com.google.android.recaptcha.Recaptcha
-import com.google.android.recaptcha.RecaptchaAction
-import kotlinx.coroutines.tasks.await
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,9 +34,6 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    // reCAPTCHA site key — replace with your key from Google Cloud Console
-    private val recaptchaSiteKey = "6Ld7sActAAAAAEsq49NVl4JNAxr-lsZFbCK6YebN"
-
     fun toggleMode() {
         _uiState.update { it.copy(isRegisterMode = !it.isRegisterMode, error = null) }
     }
@@ -63,24 +56,20 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun register(email: String, password: String, activity: Activity) {
+    // reCAPTCHA token left empty — email verification is the human check.
+    // Wire in reCAPTCHA here once a backend is available to verify the token.
+    fun register(email: String, password: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                val recaptchaClient = Recaptcha.getTasksClient(activity.application, recaptchaSiteKey).await()
-                val token = recaptchaClient.execute(RecaptchaAction.custom("register")).await()
-                registerUseCase(email, password, token)
-                    .onSuccess {
-                        _uiState.update {
-                            it.copy(isLoading = false, pendingEmailVerification = true, isRegisterMode = false)
-                        }
+            registerUseCase(email, password, "")
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(isLoading = false, pendingEmailVerification = true, isRegisterMode = false)
                     }
-                    .onFailure { e ->
-                        _uiState.update { it.copy(isLoading = false, error = e.message) }
-                    }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "reCAPTCHA failed: ${e.message}") }
-            }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                }
         }
     }
 

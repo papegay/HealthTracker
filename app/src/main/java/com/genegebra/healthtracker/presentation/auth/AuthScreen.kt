@@ -1,6 +1,5 @@
 package com.genegebra.healthtracker.presentation.auth
 
-import android.app.Activity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -99,7 +98,7 @@ fun AuthScreen(
             onClick = {
                 if (uiState.isRegisterMode) {
                     if (password == confirmPassword) {
-                        viewModel.register(email, password, context as Activity)
+                        viewModel.register(email, password)
                     } else {
                         viewModel.clearError()
                     }
